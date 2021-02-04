@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<!-- 
+* @author Mayya Sedova <msedova.dev@gmail.com>
+-->
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>XtalPred construct designer</title>
+        <link rel="stylesheet" type="text/css"
+              href="http://yui.yahooapis.com/3.14.1/build/cssreset/cssreset-min.css">
+        <link rel="stylesheet" 	href="http://code.jquery.com/ui/1.11.0/themes/smoothness/jquery-ui.css">
+        <script type="text/javascript"	src="http://code.jquery.com/jquery-1.11.1.min.js"></script>
+        <script type="text/javascript"	src="http://code.jquery.com/ui/1.11.0/jquery-ui.min.js"></script>
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+
+        <!--Snap is required:-->
+        <script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/snap.svg/0.5.1/snap.svg-min.js"></script>
+        <script type="text/javascript" 	src="http://sanshu.github.io/protaelweb/js/main.js"></script>
+        <link rel="stylesheet" href="http://sanshu.github.io/protaelweb/css/main.css">
+        <script type="text/javascript" src="http://sanshu.github.io/protaelweb/js/protael.1.1.0.min.js"></script>
+
+        <style>
+            body {padding-top: 10px;}
+        </style>
+    </head>
+    <body>
+        <h4 id="tgtitle"></h4>
+        <div id="svgholder" width="95%"></div>
+        <a class="btn btn-primary btn-sm" id="xtalpred_link" href="" alt="Go back to results">Back to XtalPred results</a>
+        <a class="btn btn-primary btn-sm" href="http://protael.org/" alt="Go to Protael visualization ibrary website">Go to Protael </a>
+        <script>
+            var urlParams;
+            (window.onpopstate = function () {
+                var match, pl = /\+/g, // Regex for replacing addition symbol with a space
+                    search = /([^&=]+)=?([^&]*)/g, decode = function (s) {
+                        return decodeURIComponent(s.replace(pl, " "));
+                    }, query = window.location.search.substring(1);
+
+                urlParams = {};
+                while (match = search.exec(query))
+                    urlParams[decode(match[1])] = decode(match[2]);
+            })();
+
+            var dir = urlParams["dir"] || 'db/CSGID/all/IDP97303.1.90';
+            var limit = urlParams["limit"] || 20;
+            var showAli = urlParams["ali"] || true;
+
+            var jsonurl = 'http://csgid-submissions.org/Json4PV/getjson?dir=' + dir + '&limit=' + limit + '&ali=' + showAli;
+
+            $(document).ready(
+                function () {
+                    $.getJSON(jsonurl, {
+                        format: "json"
+                    }).done(
+                        function (protein) {
+                            Protael(protein, "svgholder", true).draw();
+
+                            $("#xtalpred_link").attr(
+                                "href",
+                                "http://ffas.godziklab.org/XtalPred-cgi/result.pl?dir="
+                                + dir);
+                            $("#tgtitle").text("Target " + protein.label);
+                        });
+                });
+        </script>
+        <script>
+            (function (i, s, o, g, r, a, m) {
+                i['GoogleAnalyticsObject'] = r;
+                i[r] = i[r] || function () {
+                    (i[r].q = i[r].q || []).push(arguments)
+                }, i[r].l = 1 * new Date();
+                a = s.createElement(o), m = s.getElementsByTagName(o)[0];
+                a.async = 1;
+                a.src = g;
+                m.parentNode.insertBefore(a, m)
+            })(window, document, 'script', '//www.google-analytics.com/analytics.js',
+                'ga');
+
+            ga('create', 'UA-50502533-1', 'burnham.org');
+            ga('require', 'displayfeatures');
+            ga('send', 'pageview');
+        </script>
+
+        <script type="text/javascript"  src="http://sanshu.github.io/protaelweb/js/vendor/FileSaver_Blob.js"></script>
+    </body>
+</html>
+

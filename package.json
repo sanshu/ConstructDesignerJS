@@ -1,0 +1,37 @@
+{
+  "name": "constructdesigner",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest",
+    "testWatch": "jest --watchAll",
+    "build": "babel index.js -d lib"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sanshu/ConstructDesignerJS.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/sanshu/ConstructDesignerJS/issues"
+  },
+  "homepage": "https://github.com/sanshu/ConstructDesignerJS#readme",
+  "devDependencies": {
+    "@babel/cli": "^7.12.1",
+    "@babel/core": "^7.12.3",
+    "@babel/plugin-transform-modules-umd": "^7.12.1",
+    "@babel/preset-env": "^7.12.1",
+    "babel-cli": "^6.26.0",
+    "babel-jest": "^26.6.2",
+    "cross-env": "^7.0.2",
+    "jest": "^26.6.2",
+    "jquery": "^3.5.1",
+    "webpack": "^5.4.0",
+    "webpack-cli": "^4.2.0"
+  },
+  "dependencies": {
+    "node-fetch": "^2.6.1"
+  }
+}
