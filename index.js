@@ -99,7 +99,8 @@ const getProtein = async (dir, showAli, limit) => {
 
     //parse fasta
     // console.log(fasta)
-    let lines = fasta.trim().split("\n");
+
+    let lines = linesFromData(fasta);
     if (lines[0].startsWith(">")) {
         protein.label = lines[0].substring(1);
         lines[0] = ""
@@ -125,6 +126,8 @@ const getProtein = async (dir, showAli, limit) => {
 
     await getNextData("Summary", url + "&type=summary", parseSummary);
     await getNextData("psi-blast", url + "pdb101.ali", parsePDB101, [showAli, limit]);
+    await getNextData("SurfPred", url + F.surfpred, parseSurfPred)
+    await getNextData("SurfPred", url + F.evolconspred, parseConsPred)
 
     // //     loadSurfpred(protein, url, out);
     // //     loadCorservpred(protein, url, out);
@@ -185,14 +188,14 @@ const parseDisopred = function (data, protein) {
     // console.log("*****************************************************")
     data = data.replace("DISOPRED2 output:", "");
 
-    const lines = data.trim().split("\n");
+    const lines = linesFromData(data);
     const skip = 5;
 
     let track = { color: "orange", label: "Disorder", values: [] }
 
     for (let l = skip; l < lines.length; l++) {
-        let pats = lines[l].split(" ");
-        pats.length > 4 && track.values.push(parseFloat(pats[pats.length - 1]));
+        let parts = lines[l].split(" ");
+        parts.length > 4 && track.values.push(parseFloat(parts[parts.length - 1]));
     }
     protein.qtracks.push(track);
 }
@@ -202,7 +205,7 @@ const parsePSIpred = function (data, protein) {
     // console.log("*****************************************************")
 
     data = data.replace("PSIPRED output:", "");
-    const lines = data.trim().split("\n");
+    const lines = linesFromData(data);
 
     const skip = 2;
     let coilTrack = { color: "#000", label: "Coil", values: [] }
@@ -214,13 +217,13 @@ const parsePSIpred = function (data, protein) {
         let line = lines[l].trim();
         if (line.length === 0) continue;
 
-        let pats = line.replace(/  +/g, ' ').split(" ");
-        if (pats.length < 6) continue;
-        let inc = pats.length > 6 ? 1 : 0;
+        let parts = line.replace(/  +/g, ' ').split(" ");
+        if (parts.length < 6) continue;
+        let inc = parts.length > 6 ? 1 : 0;
 
-        coilTrack.values.push(parseFloat(pats[3 + inc]));
-        helixTrack.values.push(parseFloat(pats[4 + inc]));
-        strandTrack.values.push(parseFloat(pats[5 + inc]));
+        coilTrack.values.push(parseFloat(parts[3 + inc]));
+        helixTrack.values.push(parseFloat(parts[4 + inc]));
+        strandTrack.values.push(parseFloat(parts[5 + inc]));
     }
     protein.qtracks.push(coilTrack);
     protein.qtracks.push(helixTrack);
@@ -231,7 +234,7 @@ const parseTMH = function (data, protein) {
     // console.log(data);
     // console.log("*****************************************************");
     data = data.replace("TMHMM output:", "");
-    const lines = data.trim().split("\n");
+    const lines = linesFromData(data);
 
     lines.forEach(l => {
         l = l.trim();
@@ -255,7 +258,7 @@ const parseSegpred = function (data, protein) {
     // console.log(data);
     // console.log("*****************************************************");
     data = data.replace("SEG output:", "");
-    const lines = data.trim().split("\n");
+    const lines = linesFromData(data);
 
     if (lines[0].startsWith(">")) {
         lines[0] = ""
@@ -281,7 +284,7 @@ const parseCoils = function (data, protein) {
     // console.log(data);
     // console.log("*****************************************************");
     data = data.replace("COILS output:", "");
-    let lines = data.trim().split("\n");
+    let lines = linesFromData(data);
 
     if (lines[0].startsWith(">")) {
         lines[0] = ""
@@ -306,7 +309,7 @@ const parseProperties = function (data, protein) {
     // console.log(data);
     // console.log("*****************************************************");
     data = data.replace("Protein sequence in FASTA format:", "");
-    const lines = data.trim().split("\n");
+    const lines = linesFromData(data);
     lines.forEach(l => {
         const parts = l.split(":");
         if (parts.length > 1) {
@@ -324,7 +327,7 @@ const parsePDB101 = async function (data, protein, extras) {
 
     const dsspPrefix = "https://ffas.godziklab.org/ffas/dssp/";
 
-    const lines = data.trim().split("\n");
+    const lines = linesFromData(data);
     const skip = 2;
     let start = -1;
     let c = 0; // counter
@@ -337,7 +340,7 @@ const parsePDB101 = async function (data, protein, extras) {
 
     for (let i = skip; i < lines.length; i++) {
         if (c > limit) {
-            console.log(`read ${c} alignments. exiting read cycle`)
+            // console.log(`read ${c} alignments. exiting read cycle`)
             break;
         }
         let l = lines[i].trim();
@@ -437,7 +440,7 @@ const parseDSSP = function (dssp, start, fragmentStart, deletions, seq, protSeq)
     // console.log(`before:\n${a}\n${seq}\n${str}`)
 
 
-   // >6NHS_1|Chain A|Beta-lactamase|Nostoc sp. (strain PCC 7120 / SAG 25.82 / UTEX 2576) (103690)
+    // >6NHS_1|Chain A|Beta-lactamase|Nostoc sp. (strain PCC 7120 / SAG 25.82 / UTEX 2576) (103690)
     // SNARDMPGHSQEIQTPAIPVNVNLGRSFNQLGIKGSILIYDRNNKKFYEHNAARNSQSFLPASTFKIFNSLVALETGVISNDVAILTWDGMQRQFPTWNQDTNIRQAFRNSTVWFYQVLARKIGHERMEKFIKQVGYGNLQIGTPEQIDRFWLEGPLQITPKQQIEFLQRLHRKELPFSQRTLDLVQDIMIYERTPNYVLRGKTGWAASVTPNIGWFVGYLEQNNNVYFFATNIDIRNNDDAAARIEVTRRSLKALGLL
     // >6nhsA
     // XXXXXXXXXXXXXXXXXXXX   THHHHHHTT  EEEEEEETTTTEEEEE TTGGGS B  GGGHHHHHHHHHHHHTSS SSS EE   S   SSGGGSS EEHHHHHHHT HHHHHHHHHHH HHHHHHHHHHHT TT     GGGTTTHHHHSS  B HHHHHHHHHHHHTT SS  HHHHHHHHHHTEEEE SSEEEEEEEEEE SSSSEEEEEEEEEEETTEEEEEEEEEEESSHHHHHHHHHHHHHHHHHTT  
@@ -445,8 +448,8 @@ const parseDSSP = function (dssp, start, fragmentStart, deletions, seq, protSeq)
     //          SSTALAGSITENTSWNKEFSAEAVNGVFVLCKSSSKSCATNDLARASKEYLPASTFKIPNAIIGLETGVIKNEHQVFKWDGKPRAMKQWERDLTLRGAIQVSAVPVFQQIAREVGEVRMQKYLKKFSYGNQNISGG--IDKFWLEDQLRISAVNQVEFLESLYLNKLSASKENQLIVKEALVTEAAPEYLVHSKTGFSGVGTESNPGVAWWVGWVEKETEVYFFAFNMDIDNESKLPLRKSIPTKIMESEGII
     ///////////////////                                                                                                                                 || deletion                                                     ||| insertion    
     //          XXXXXXXXXXX   THHHHHHTT  EEEEEEETTTTEEEEE TTGGGS B  GGGHHHHHHHHHHHHTSS SSS EE   S   SSGGGSS EEHHHHHHHT HHHHHHHHHHH HHHHHHHHHHHT TT     GTTTHHHHSS  B HHHHHHHHHHHHTT SS  HHHHHHHHHHTEEEE SSEEEEEEEEEE S...SSSEEEEEEEEEEETTEEEEEEEEEEESSHHHHHHHHHHHHHHHHHTT  
-  
-    
+
+
     // remove the very first gap (ali start) to ensure that positions are the same
     let dsspStr = dssp.substring(fragmentStart - 1)
     // if (!str.startsWith("XXXXXXXXXXX   THHHHHHTT"))
@@ -491,29 +494,53 @@ const parseDSSP = function (dssp, start, fragmentStart, deletions, seq, protSeq)
     }
     // console.log(protSeq.substring(start - 1) + "\n" + chars.join("")+"\n"+dssp)
 
-
-
-    // insert gaps from aligned PDS seq into SS&Diso
-    //         Matcher m = pattern.matcher(seq.toString());
-    //         List<Interval> othergaps = new ArrayList<Interval>();
-
-    //         while (m.find()) {
-    //             Interval g = new Interval(m.start(), m.end());
-    //             othergaps.add(g);
-    //         }
-
-    //         for (let z = 0; z < othergaps.size(); z++) {
-    //             Interval g = othergaps.get(z);
-    //             sb.insert(g.getStart(),
-    //                     lineOfDOts(g.getEnd() - g.getStart()));
-    //         }
-
-    //         for (let z = gaps.size() - 1; z >= 0; z--) {
-    //             Interval g = gaps.get(z);
-    //             sb.delete(g.getStart(), g.getEnd());
-    //         }
-
     return chars.join("");
+}
+
+const linesFromData = function (data) {
+    let lines = data.trim().split("\n");
+    if (lines[lines.length - 1].trim() === "SP:")
+        lines.pop();
+    return lines;
+}
+
+const parseSurfPred = function (data, protein) {
+    // console.log(data)
+
+    const lines = linesFromData(data);
+
+    let track = { color: "#8F6B00", label: "Surface accesibility", type: "column", values: [] }
+
+    lines.forEach(l => {
+        l = l.trim().replace(/\s+/g, " ")
+        if (!l.startsWith("#")) {
+            let parts = l.split(" ");
+            track.values.push(parseFloat(parts[4]) || 0);
+        }
+    })
+
+    protein.qtracks.push(track);
+    console.log(track)
+}
+
+const parseConsPred = function (data, protein) {
+    // console.log(data)
+    const lines = linesFromData(data);
+
+    let track = { color: "#006600", label: "Evolutionary conservation", type: "column", values: [] }
+
+    for (let l in lines) {
+        let line = lines[l].trim().replace(/\s+/g, " ")
+        if (line.startsWith("*")) {
+            // end of data
+            break;
+        }
+        let parts = line.split(" ");
+        track.values.push(parseFloat(parts[2]) || 0);
+
+    }
+    // console.log(track)
+    protein.qtracks.push(track);
 }
 
 export default {
