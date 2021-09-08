@@ -212,6 +212,7 @@ const parsePSIpred = function (data, protein) {
     let helixTrack = { color: "red", label: "Helix", values: [] }
     let strandTrack = { color: "blue", label: "Strand", values: [] }
 
+    let seqColors = "";
 
     for (let l = skip; l < lines.length; l++) {
         let line = lines[l].trim();
@@ -221,10 +222,12 @@ const parsePSIpred = function (data, protein) {
         if (parts.length < 6) continue;
         let inc = parts.length > 6 ? 1 : 0;
 
+        seqColors += parts[2 + inc];
         coilTrack.values.push(parseFloat(parts[3 + inc]));
         helixTrack.values.push(parseFloat(parts[4 + inc]));
         strandTrack.values.push(parseFloat(parts[5 + inc]));
     }
+    protein.seqcolors.data = seqColors;
     protein.qtracks.push(coilTrack);
     protein.qtracks.push(helixTrack);
     protein.qtracks.push(strandTrack);
